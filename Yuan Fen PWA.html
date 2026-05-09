@@ -556,6 +556,15 @@
   </header>
 
   <div id="inputSection">
+    <!-- API Key -->
+    <div style="margin-bottom:20px;padding:16px 18px;background:rgba(255,255,255,0.7);border-radius:16px;border:1.5px solid rgba(240,98,146,0.2);backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(240,98,146,0.08)">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:10px">Anthropic API Key</div>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;background:var(--white);border:1.5px solid rgba(240,98,146,0.3);border-radius:50px;color:var(--text);padding:10px 16px;font-family:Lato,sans-serif;font-size:14px;outline:none" />
+        <button id="btnClearKey" style="padding:0 14px;background:transparent;border:1.5px solid rgba(240,98,146,0.3);border-radius:50px;color:var(--pink);font-size:13px;cursor:pointer">✕</button>
+      </div>
+      <div id="apiNote" style="font-size:11px;color:var(--text-light);opacity:0.6;margin-top:8px;padding-left:4px">Your key is saved in this browser only</div>
+    </div>
     <div class="upload-pair">
       <div class="upload-slot upload-slot-1" id="slot1">
         <div class="slot-label">Person One</div>
@@ -624,6 +633,29 @@
   });
 
   let file1 = null, file2 = null;
+
+  // API Key localStorage
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const apiNote = document.getElementById('apiNote');
+  const savedKey = localStorage.getItem('yuanfen_api_key');
+  if (savedKey) {
+    apiKeyInput.value = savedKey;
+    apiNote.innerHTML = '<span style="color:var(--pink)">✓ API key loaded</span> · ✕ to clear';
+  }
+  apiKeyInput.addEventListener('input', () => {
+    const val = apiKeyInput.value.trim();
+    if (val.startsWith('sk-ant-') && val.length > 20) {
+      localStorage.setItem('yuanfen_api_key', val);
+      apiNote.innerHTML = '<span style="color:var(--pink)">✓ Key saved</span> · ✕ to clear';
+    }
+  });
+  document.getElementById('btnClearKey').addEventListener('click', () => {
+    localStorage.removeItem('yuanfen_api_key');
+    apiKeyInput.value = '';
+    apiNote.textContent = 'Your key is saved in this browser only';
+    apiKeyInput.focus();
+  });
+
   const btnAnalyze = document.getElementById('btnAnalyze');
   const loading = document.getElementById('loading');
   const result = document.getElementById('result');
@@ -698,9 +730,17 @@
     try {
       const [b1, b2] = await Promise.all([toBase64(file1), toBase64(file2)]);
 
-      const res = await fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev', {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) { alert('Please enter your Anthropic API key first.'); apiKeyInput.focus(); return; }
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
         body: JSON.stringify({
           model: 'claude-opus-4-6',
           max_tokens: 1200,
