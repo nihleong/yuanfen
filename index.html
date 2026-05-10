@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>緣份 — Couple Compatibility</title>
+  <script src="https://js.stripe.com/v3/"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
@@ -580,6 +581,68 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--rose); border-radius: 10px; }
+
+    #stripeModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(61,26,46,0.7);
+      backdrop-filter: blur(6px);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    #stripeModal.visible { display: flex; }
+    #stripeModalBox {
+      background: white;
+      border-radius: 24px;
+      max-width: 480px;
+      width: 92%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(233,30,140,0.25);
+    }
+    #stripeModalHeader {
+      background: linear-gradient(135deg, var(--pink-deep), var(--pink));
+      color: white;
+      padding: 20px 24px;
+      border-radius: 24px 24px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #stripeModalHeader h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
+    #stripeModalClose {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #stripeContainer { padding: 20px 24px 24px; }
+    #currency-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .curr-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 50px;
+      border: 1.5px solid var(--pink);
+      background: var(--pink-light);
+      color: var(--pink-deep);
+      font-family: 'Lato', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .curr-btn.inactive {
+      border-color: rgba(240,98,146,0.2);
+      background: transparent;
+      color: var(--text-light);
+      font-weight: 400;
+    }
+    #loadingStripe { text-align: center; padding: 30px; color: var(--text-light); font-style: italic; }
   </style>
 </head>
 <body>
@@ -619,7 +682,7 @@
     </div>
 
     <!-- Price info -->
-    <div style="background:var(--card);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 16px rgba(240,98,146,0.1);border:1.5px solid rgba(240,98,146,0.15)">
+    <div id="priceBox" style="background:var(--card);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 16px rgba(240,98,146,0.1);border:1.5px solid rgba(240,98,146,0.15)">
       <div>
         <div style="font-size:10px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:4px">Compatibility Reading</div>
         <div style="font-size:13px;color:var(--text-light)">Both partners · PDF included</div>
@@ -662,6 +725,23 @@
     </div>
     <button class="btn-download" id="btnDownload">⬇ &nbsp; Download PDF Reading &nbsp; ⬇</button>
     <button class="btn-reset" id="btnReset">💕 &nbsp; New Reading &nbsp; 💕</button>
+  </div>
+
+  <div id="stripeModal">
+    <div id="stripeModalBox">
+      <div id="stripeModalHeader">
+        <h3>🔒 &nbsp; Secure Payment</h3>
+        <button id="stripeModalClose" onclick="closeStripeModal()">✕</button>
+      </div>
+      <div id="stripeContainer">
+        <div id="currency-row">
+          <button class="curr-btn" id="cUSD" onclick="switchCurrency('usd')">USD $9.99</button>
+          <button class="curr-btn inactive" id="cMYR" onclick="switchCurrency('myr')">MYR RM40</button>
+        </div>
+        <div id="loadingStripe">Loading secure payment form…</div>
+        <div id="stripe-checkout-container"></div>
+      </div>
+    </div>
   </div>
 
   <footer>緣份 · Ancient Chinese Compatibility · 相術</footer>
@@ -748,6 +828,32 @@
 
   var paymentVerified = false;
   var selectedCurrency = 'usd';
+  var stripeCheckout = null;
+  var STRIPE_PK = 'pk_live_51TVRVEER9GkuaTIhHBnM6E0XrBONDzrUVnehvYricJZuH5x2zQJqLXtW41O2ECjBhOeSsWL9SWajlYN8nRu5EQWx00Bwy9j1aC';
+
+  // Handle return from embedded checkout
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var payment = params.get('payment');
+    var sessionId = params.get('session_id');
+    if (payment === 'success' && sessionId) {
+      window.history.replaceState({}, '', window.location.pathname);
+      fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sessionId })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.paid) {
+          paymentVerified = true;
+          hidePriceBox();
+          var b = document.getElementById('successBanner');
+          if (b) b.style.display = 'block';
+        }
+      }).catch(function(e) { console.error(e); });
+    }
+  })();
 
   function selectCurrency(c) {
     selectedCurrency = c;
@@ -758,44 +864,70 @@
     document.getElementById('btnMYR').style.borderColor = c === 'myr' ? 'var(--pink)' : 'rgba(240,98,146,0.2)';
   }
 
-  // Check if returning from Stripe
-  (function() {
-    var params = new URLSearchParams(window.location.search);
-    var payment = params.get('payment');
-    var sessionId = params.get('session_id');
-    window.history.replaceState({}, '', window.location.pathname);
-    if (payment === 'success' && sessionId) {
-      fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: sessionId })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.paid) {
-          paymentVerified = true;
-          var b = document.getElementById('successBanner');
-          if (b) b.style.display = 'block';
-        }
-      }).catch(function(e) { console.error(e); });
-    }
-  })();
+  function hidePriceBox() {
+    var pb = document.getElementById('priceBox');
+    if (pb) pb.style.display = 'none';
+  }
 
-  function startPayment() {
-    var btn = document.getElementById('btnAnalyze');
-    btn.disabled = true;
-    btn.textContent = 'Redirecting to payment…';
-    fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev/create-checkout', {
+  function closeStripeModal() {
+    document.getElementById('stripeModal').classList.remove('visible');
+    if (stripeCheckout) { stripeCheckout.destroy(); stripeCheckout = null; }
+  }
+
+  function switchCurrency(c) {
+    selectedCurrency = c;
+    document.getElementById('cUSD').className = 'curr-btn' + (c === 'usd' ? '' : ' inactive');
+    document.getElementById('cMYR').className = 'curr-btn' + (c === 'myr' ? '' : ' inactive');
+    loadStripeCheckout();
+  }
+
+  function loadStripeCheckout() {
+    var container = document.getElementById('stripe-checkout-container');
+    var loading = document.getElementById('loadingStripe');
+    container.innerHTML = '';
+    loading.style.display = 'block';
+    if (stripeCheckout) { stripeCheckout.destroy(); stripeCheckout = null; }
+
+    fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev/create-checkout-embedded', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ app: 'yuanfen', currency: selectedCurrency })
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.url) { window.location.href = data.url; }
-      else { alert('Error: ' + (data.error||'Unknown')); btn.disabled = false; btn.textContent = '💕  Reveal Our Destiny  💕'; }
+      if (data.clientSecret) {
+        loading.style.display = 'none';
+        var stripe = Stripe(STRIPE_PK);
+        stripe.initEmbeddedCheckout({
+          clientSecret: data.clientSecret,
+          onComplete: function() {
+            // Payment complete - no redirect needed!
+            if (stripeCheckout) { stripeCheckout.destroy(); stripeCheckout = null; }
+            document.getElementById('stripeModal').classList.remove('visible');
+            paymentVerified = true;
+            hidePriceBox();
+            var b = document.getElementById('successBanner');
+            if (b) b.style.display = 'block';
+            // Trigger analysis automatically
+            if (file1 && file2) {
+              setTimeout(function() { analyze(); }, 500);
+            }
+          }
+        })
+        .then(function(checkout) {
+          stripeCheckout = checkout;
+          checkout.mount('#stripe-checkout-container');
+        });
+      } else {
+        loading.textContent = 'Error: ' + (data.error || 'Unknown');
+      }
     })
-    .catch(function(e) { alert(e.message); btn.disabled = false; btn.textContent = '💕  Reveal Our Destiny  💕'; });
+    .catch(function(e) { loading.textContent = 'Error: ' + e.message; });
+  }
+
+  function startPayment() {
+    document.getElementById('stripeModal').classList.add('visible');
+    loadStripeCheckout();
   }
 
   btnAnalyze.addEventListener('click', function() {
@@ -944,70 +1076,63 @@ Be detailed, romantic, specific, and deeply encouraging. Make them feel like the
 
   // PDF Download
   document.getElementById('btnDownload').addEventListener('click', function() {
+    var btn = document.getElementById('btnDownload');
+    btn.textContent = '⏳ Generating PDF…';
+    btn.disabled = true;
+
     var couple = document.getElementById('coupleNames').textContent;
     var score = document.getElementById('scoreDisplay').textContent;
     var hearts = document.getElementById('heartBar').textContent;
-    var readingContent = document.getElementById('resultContent').innerHTML;
-    var date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    var date = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+    var printDiv = document.createElement('div');
+    printDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:white;font-family:Georgia,serif;color:#3d1a2e;';
+    printDiv.innerHTML =
+      '<div style="background:linear-gradient(135deg,#e91e8c,#f06292,#f9a825);color:white;padding:48px;text-align:center">' +
+        '<div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;opacity:0.85;margin-bottom:10px">Ancient Chinese Compatibility Reading</div>' +
+        '<div style="font-size:68px;letter-spacing:10px;margin-bottom:4px">&#32511;&#20221;</div>' +
+        '<div style="font-size:16px;font-style:italic;letter-spacing:4px;opacity:0.9">Yu&#225;n F&#232;n &middot; Destiny &amp; Love</div>' +
+      '</div>' +
+      '<div style="background:#fff5f7;padding:10px 48px;display:flex;justify-content:space-between;font-size:11px;color:#7b4f6a;border-bottom:2px solid #fce4ec">' +
+        '<span>YuanFen Compatibility Reader</span><span>' + date + '</span><span>yuanfen.moonstoneadvisers.com</span>' +
+      '</div>' +
+      '<div style="background:linear-gradient(135deg,#fff0f7,#fffbe6);padding:20px 48px;text-align:center;border-bottom:1px solid #fce4ec">' +
+        '<div style="font-size:16px;font-style:italic;color:#3d1a2e;margin-bottom:6px">' + couple + '</div>' +
+        '<div style="font-size:10px;letter-spacing:4px;color:#f06292;text-transform:uppercase;margin-bottom:4px">Compatibility Score</div>' +
+        '<div style="font-size:48px;font-weight:700;color:#e91e8c;line-height:1">' + score + '</div>' +
+        '<div style="font-size:18px;margin-top:6px;letter-spacing:4px">' + hearts + '</div>' +
+      '</div>' +
+      '<div style="padding:28px 48px 48px">' + document.getElementById('resultContent').innerHTML + '</div>' +
+      '<div style="background:linear-gradient(135deg,#e91e8c,#f9a825);color:white;text-align:center;padding:12px;font-size:10px;letter-spacing:2px;text-transform:uppercase">&#32511;&#20221; &middot; yuanfen.moonstoneadvisers.com</div>';
 
-    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-    html += '<title>YuanFen Compatibility Reading</title>';
-    html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">';
-    html += '<style>';
-    html += '* { box-sizing: border-box; margin: 0; padding: 0; }';
-    html += 'body { font-family: Lato, sans-serif; color: #3d1a2e; background: white; }';
-    html += '.cover { background: linear-gradient(135deg, #e91e8c, #f06292, #f9a825); color: white; padding: 56px 48px; text-align: center; }';
-    html += '.cover-top { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; opacity: 0.85; margin-bottom: 10px; }';
-    html += '.cover-chinese { font-family: serif; font-size: 68px; letter-spacing: 12px; margin-bottom: 4px; }';
-    html += '.cover-pinyin { font-family: "Playfair Display", serif; font-size: 18px; font-style: italic; letter-spacing: 4px; opacity: 0.9; margin-bottom: 4px; }';
-    html += '.cover-title { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.75; }';
-    html += '.meta { background: #fff5f7; padding: 12px 48px; display: flex; justify-content: space-between; font-size: 11px; color: #7b4f6a; letter-spacing: 1px; border-bottom: 2px solid #fce4ec; }';
-    html += '.score-banner { background: linear-gradient(135deg, #fff0f7, #fffbe6); padding: 24px 48px; text-align: center; border-bottom: 1px solid #fce4ec; }';
-    html += '.score-couple { font-family: "Playfair Display", serif; font-size: 20px; font-style: italic; color: #3d1a2e; margin-bottom: 8px; }';
-    html += '.score-label { font-size: 10px; letter-spacing: 4px; color: #f06292; text-transform: uppercase; margin-bottom: 6px; }';
-    html += '.score-value { font-family: "Playfair Display", serif; font-size: 52px; font-weight: 700; color: #e91e8c; line-height: 1; }';
-    html += '.score-hearts { font-size: 20px; margin-top: 8px; letter-spacing: 4px; }';
-    html += '.content { padding: 32px 48px 48px; }';
-    html += 'h2 { font-family: "Playfair Display", serif; font-size: 16px; font-style: italic; color: #e91e8c; margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid #fce4ec; }';
-    html += 'h3 { font-family: "Playfair Display", serif; font-size: 14px; color: #f06292; margin: 16px 0 8px; }';
-    html += 'p { font-size: 13px; line-height: 1.8; color: #3d1a2e; margin-bottom: 12px; }';
-    html += 'strong { color: #e91e8c; font-weight: 700; }';
-    html += 'table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; table-layout: fixed; }';
-    html += 'th { background: rgba(240,98,146,0.1); color: #e91e8c; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid #fce4ec; }';
-    html += 'th:first-child, td:first-child { width: 32%; font-weight: 700; vertical-align: middle; white-space: nowrap; }';
-    html += 'th:last-child, td:last-child { width: 68%; vertical-align: top; }';
-    html += 'td { padding: 10px 12px; border-bottom: 1px solid #fce4ec; line-height: 1.6; vertical-align: top; }';
-    html += 'tr:last-child td { border-bottom: none; }';
-    html += 'blockquote { border-left: 3px solid #f06292; padding: 8px 16px; margin: 12px 0; background: rgba(240,98,146,0.05); border-radius: 0 8px 8px 0; font-style: italic; color: #7b4f6a; }';
-    html += '.footer { background: linear-gradient(135deg, #e91e8c, #f9a825); color: white; text-align: center; padding: 14px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-top: 32px; }';
-    html += '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
-    html += '</style></head><body>';
-    html += '<div class="cover">';
-    html += '<div class="cover-top">Ancient Chinese Compatibility Reading</div>';
-    html += '<div class="cover-chinese">&#32511;&#20221;</div>';
-    html += '<div class="cover-pinyin">Yu&#225;n F&#232;n</div>';
-    html += '<div class="cover-title">Destiny &amp; Love Compatibility Report</div>';
-    html += '</div>';
-    html += '<div class="meta"><span>YuanFen Compatibility Reader</span><span>Date: ' + date + '</span><span>yuanfen.moonstoneadvisers.com</span></div>';
-    html += '<div class="score-banner">';
-    html += '<div class="score-couple">' + couple + '</div>';
-    html += '<div class="score-label">Compatibility Score</div>';
-    html += '<div class="score-value">' + score + '</div>';
-    html += '<div class="score-hearts">' + hearts + '</div>';
-    html += '</div>';
-    html += '<div class="content">' + readingContent + '</div>';
-    html += '<div class="footer">&#32511;&#20221; &middot; Ancient Chinese Compatibility &middot; yuanfen.moonstoneadvisers.com</div>';
-    html += '</body></html>';
+    printDiv.querySelectorAll('table').forEach(function(t){t.style.cssText='width:100%;border-collapse:collapse;margin:10px 0;font-size:12px;table-layout:fixed;';});
+    printDiv.querySelectorAll('th').forEach(function(t){t.style.cssText='background:rgba(240,98,146,0.1);color:#e91e8c;padding:7px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #fce4ec;';});
+    printDiv.querySelectorAll('th:first-child,td:first-child').forEach(function(t){t.style.width='32%';t.style.whiteSpace='nowrap';});
+    printDiv.querySelectorAll('td').forEach(function(t){t.style.cssText='padding:8px 12px;border-bottom:1px solid #fce4ec;line-height:1.6;font-size:12px;vertical-align:top;';});
+    printDiv.querySelectorAll('h2').forEach(function(h){h.style.cssText='font-size:14px;font-style:italic;color:#e91e8c;margin:20px 0 8px;padding-bottom:5px;border-bottom:1px solid #fce4ec;';});
+    printDiv.querySelectorAll('p').forEach(function(p){p.style.cssText='font-size:12px;line-height:1.7;margin-bottom:8px;';});
+    printDiv.querySelectorAll('strong').forEach(function(s){s.style.color='#e91e8c';s.style.fontWeight='700';});
+    document.body.appendChild(printDiv);
 
-    var blob = new Blob([html], { type: 'text/html' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'yuanfen-reading.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    html2canvas(printDiv,{scale:2,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+      document.body.removeChild(printDiv);
+      var img = canvas.toDataURL('image/jpeg',0.92);
+      var pdf = new window.jspdf.jsPDF('p','mm','a4');
+      var pw = pdf.internal.pageSize.getWidth();
+      var ph = pdf.internal.pageSize.getHeight();
+      var ih = (canvas.height * pw) / canvas.width;
+      var left = ih;
+      var pos = 0;
+      pdf.addImage(img,'JPEG',0,pos,pw,ih);
+      left -= ph;
+      while(left > 0){pos = left-ih;pdf.addPage();pdf.addImage(img,'JPEG',0,pos,pw,ih);left-=ph;}
+      pdf.save('yuanfen-reading.pdf');
+      btn.textContent = '⬇  Download PDF Reading  ⬇';
+      btn.disabled = false;
+    }).catch(function(e){
+      btn.textContent = '⬇  Download PDF Reading  ⬇';
+      btn.disabled = false;
+      alert('PDF error: '+e.message);
+    });
   });
 </script>
 </body>
