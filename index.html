@@ -945,7 +945,12 @@
     result.classList.remove('visible');
 
     try {
-      const [b1, b2] = await Promise.all([toBase64(file1), toBase64(file2)]);
+      // Compress both if over 3MB
+      const [cf1, cf2] = await Promise.all([
+        new Promise(function(resolve) { compressImage(file1, 3000, resolve); }),
+        new Promise(function(resolve) { compressImage(file2, 3000, resolve); })
+      ]);
+      const [b1, b2] = await Promise.all([toBase64(cf1), toBase64(cf2)]);
 
       const res = await fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev', {
         method: 'POST',
@@ -956,8 +961,8 @@
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: file1.type || 'image/jpeg', data: b1 } },
-              { type: 'image', source: { type: 'base64', media_type: file2.type || 'image/jpeg', data: b2 } },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b1 } },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b2 } },
               { type: 'text', text: buildPrompt(name1, name2) }
             ]
           }]
@@ -1002,6 +1007,39 @@
     resetSlot('slot1','Person One','🌸','file1',1);
     resetSlot('slot2','Person Two','🌺','file2',2);
   });
+
+  function compressImage(file, maxSizeKB, callback) {
+    var maxBytes = maxSizeKB * 1024;
+    if (file.size <= maxBytes) { callback(file); return; }
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 1600;
+      var w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      // Try progressively lower quality until under limit
+      var quality = 0.85;
+      var tryCompress = function() {
+        canvas.toBlob(function(blob) {
+          URL.revokeObjectURL(url);
+          if (blob.size <= maxBytes || quality <= 0.3) {
+            callback(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            quality -= 0.1;
+            tryCompress();
+          }
+        }, 'image/jpeg', quality);
+      };
+      tryCompress();
+    };
+    img.src = url;
+  }
 
   function toBase64(file) {
     return new Promise((res,rej) => {
