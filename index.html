@@ -860,22 +860,26 @@
   const inputSection = document.getElementById('inputSection');
 
   function setupSlot(slotId, fileInputId, num) {
-    const slot = document.getElementById(slotId);
-    const fi = document.getElementById(fileInputId);
-    slot.addEventListener('click', e => {
+    var slot = document.getElementById(slotId);
+    var fi = document.getElementById(fileInputId);
+    if (!slot || !fi) { return; }
+    // Move file input to body so it works even when parent section is hidden
+    fi.style.display = 'none';
+    document.body.appendChild(fi);
+    slot.onclick = function(e) {
       if (e.target.classList.contains('slot-remove') || e.target.classList.contains('slot-name-input')) return;
       if (num === 1 && file1) return;
       if (num === 2 && file2) return;
       fi.click();
-    });
-    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('dragover'); });
-    slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
-    slot.addEventListener('drop', e => {
+    };
+    slot.ondragover = function(e) { e.preventDefault(); slot.classList.add('dragover'); };
+    slot.ondragleave = function() { slot.classList.remove('dragover'); };
+    slot.ondrop = function(e) {
       e.preventDefault(); slot.classList.remove('dragover');
-      const f = e.dataTransfer.files[0];
+      var f = e.dataTransfer.files[0];
       if (f && f.type.startsWith('image/')) setSlotFile(num, f, slot);
-    });
-    fi.addEventListener('change', () => { if (fi.files[0]) setSlotFile(num, fi.files[0], slot); });
+    };
+    fi.onchange = function() { if (fi.files[0]) setSlotFile(num, fi.files[0], slot); };
   }
 
   function setSlotFile(num, file, slot) {
