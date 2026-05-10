@@ -458,6 +458,21 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 12px rgba(240,98,146,0.08);
+      table-layout: fixed;
+    }
+
+    .result-content th:first-child,
+    .result-content td:first-child {
+      width: 38%;
+      font-weight: 700;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .result-content th:last-child,
+    .result-content td:last-child {
+      width: 62%;
+      vertical-align: top;
     }
 
     .result-content th {
@@ -472,9 +487,11 @@
     }
 
     .result-content td {
-      padding: 10px 14px;
+      padding: 12px 14px;
       border-bottom: 1px solid rgba(240,98,146,0.08);
       color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
     }
 
     .result-content tr:last-child td { border-bottom: none; }
@@ -488,6 +505,28 @@
       border-radius: 0 12px 12px 0;
       font-style: italic;
       color: var(--text-light);
+    }
+
+    .btn-download {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--pink-deep), var(--pink));
+      border: none;
+      border-radius: 50px;
+      color: var(--white);
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-style: italic;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 16px rgba(233,30,140,0.25);
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(233,30,140,0.35);
     }
 
     .btn-reset {
@@ -600,6 +639,7 @@
     <div class="content-card">
       <div class="result-content" id="resultContent"></div>
     </div>
+    <button class="btn-download" id="btnDownload">⬇ &nbsp; Download PDF Reading &nbsp; ⬇</button>
     <button class="btn-reset" id="btnReset">💕 &nbsp; New Reading &nbsp; 💕</button>
   </div>
 
@@ -704,7 +744,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-opus-4-6',
-          max_tokens: 1200,
+          max_tokens: 2000,
           messages: [{
             role: 'user',
             content: [
@@ -765,32 +805,157 @@
   }
 
   function buildPrompt(name1, name2) {
-    return `You are a fun, warm, and romantic Chinese face reading (MianXiang 面相) compatibility master. You are analyzing TWO faces — the first image is ${name1} and the second image is ${name2}.
+    return `You are an expert Chinese face reading (MianXiang 面相) compatibility master with decades of experience in matchmaking and destiny reading. You are analyzing TWO faces — the first image is ${name1} and the second image is ${name2}.
 
-Give a fun, romantic, and engaging compatibility reading. Be warm, playful, and encouraging — like an excited matchmaker sharing wonderful news! Use emojis liberally to make it fun and light-hearted.
+Provide a detailed, romantic, and deeply insightful compatibility reading. Be warm, encouraging, and specific — reference actual facial features you observe. Use emojis to keep it joyful and engaging!
 
 Structure your response EXACTLY like this:
 
 ## The Cosmic Score 🌟
-Give a compatibility score out of 100 — be generous! Format it clearly as "X/100". Follow with one short, romantic sentence about what this score means. Add a fun emoji.
+Give a compatibility score out of 100 — be generous and romantic! Format it clearly as "X/100". Write 2-3 sentences about what this score means for their relationship destiny and what makes this pairing special.
 
 ## What The Stars & Faces Say 💫
-Write 2 short, fun paragraphs about how these two faces complement each other. Talk about energy, personality balance, yin-yang harmony. Be romantic and warm! Use emojis.
+Write 3-4 sentences about how these two faces complement each other energetically. Discuss the yin-yang balance, elemental compatibility, and what specific facial features create harmony between them. Be romantic, warm, and specific!
+
+## The Magic Between You ✨
+Write 2-3 sentences about the unique chemistry and dynamic this couple creates together. What makes them greater as a pair than they are individually? What is their shared destiny?
 
 ## Your Compatibility Reading 💕
 | Dimension | Reading |
 |---|---|
-| Romance & Passion 🔥 | one fun line |
-| Communication 💬 | one fun line |
-| Wealth Together 💰 | one fun line |
-| Long-term Harmony 🌸 | one fun line |
-| Overall Vibe ✨ | one fun line |
+| Romance & Passion 🔥 | 2-3 sentences about physical chemistry, romantic energy, and passion potential based on their features |
+| Communication 💬 | 2-3 sentences about how they communicate, understand each other, and resolve differences |
+| Wealth Together 💰 | 2-3 sentences about their combined financial destiny and how their energies create prosperity |
+| Long-term Harmony 🌸 | 2-3 sentences about long-term compatibility, growing together, and building a life |
+| Family & Home 🏡 | 2-3 sentences about their potential as a family unit and creating a warm home |
+| Overall Vibe ✨ | 2-3 sentences capturing the overall essence and magic of this pairing |
+
+## Your Lucky Years Together 🗓️
+Write 2 sentences about when their relationship luck peaks — which years or seasons are most auspicious for major milestones together.
 
 ## Your Couple Archetype 👫
-Name their couple archetype e.g. "The Power Couple ⚡" or "The Yin-Yang Dream Team ☯️" or "The Destined Lovers 緣" — then write 2 romantic sentences about their destiny together. Make it feel magical and special!
+Name their couple archetype e.g. "The Power Couple ⚡" or "The Yin-Yang Dream Team ☯️" or "The Destined Lovers 緣" — then write 3 romantic, meaningful sentences about their shared destiny and what makes their love story truly special.
 
-Keep it SHORT, fun, romantic and upbeat. Make them feel like the most special couple in the world!`;
+Be detailed, romantic, specific, and deeply encouraging. Make them feel like the universe conspired to bring them together!`;
   }
+
+  // PDF Download
+  document.getElementById('btnDownload').addEventListener('click', () => {
+    const couple = document.getElementById('coupleNames').textContent;
+    const score = document.getElementById('scoreDisplay').textContent;
+    const hearts = document.getElementById('heartBar').textContent;
+    const content = document.getElementById('resultContent').innerHTML;
+    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(\`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>緣份 Compatibility Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Lato', sans-serif; color: #3d1a2e; background: white; }
+
+  .cover {
+    background: linear-gradient(135deg, #e91e8c, #f06292, #f9a825);
+    color: white;
+    padding: 60px 48px;
+    text-align: center;
+  }
+
+  .cover-top { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; opacity: 0.85; margin-bottom: 12px; }
+  .cover-chinese { font-family: serif; font-size: 72px; letter-spacing: 12px; margin-bottom: 4px; }
+  .cover-pinyin { font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; letter-spacing: 4px; opacity: 0.9; margin-bottom: 4px; }
+  .cover-title { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.75; }
+
+  .meta {
+    background: #fff5f7;
+    padding: 14px 48px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #7b4f6a;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #fce4ec;
+  }
+
+  .score-banner {
+    background: linear-gradient(135deg, #fff0f7, #fffbe6);
+    padding: 28px 48px;
+    text-align: center;
+    border-bottom: 1px solid #fce4ec;
+  }
+
+  .score-couple { font-family: 'Playfair Display', serif; font-size: 20px; font-style: italic; color: #3d1a2e; margin-bottom: 8px; }
+  .score-label { font-size: 10px; letter-spacing: 4px; color: #f06292; text-transform: uppercase; margin-bottom: 6px; }
+  .score-value { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700; color: #e91e8c; line-height: 1; }
+  .score-hearts { font-size: 20px; margin-top: 8px; letter-spacing: 4px; }
+
+  .content { padding: 32px 48px 48px; }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-style: italic;
+    color: #e91e8c;
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid #fce4ec;
+  }
+
+  p { font-size: 13px; line-height: 1.8; margin-bottom: 12px; }
+  strong { color: #e91e8c; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; table-layout: fixed; }
+  th { background: rgba(240,98,146,0.1); color: #e91e8c; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid #fce4ec; }
+  th:first-child, td:first-child { width: 30%; font-weight: 700; vertical-align: top; }
+  th:last-child, td:last-child { width: 70%; vertical-align: top; }
+  td { padding: 10px 12px; border-bottom: 1px solid #fce4ec; line-height: 1.6; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  .footer {
+    background: linear-gradient(135deg, #e91e8c, #f9a825);
+    color: white;
+    text-align: center;
+    padding: 16px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 32px;
+  }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="cover-top">Ancient Chinese Compatibility Reading</div>
+    <div class="cover-chinese">緣份</div>
+    <div class="cover-pinyin">Yuán Fèn</div>
+    <div class="cover-title">Destiny & Love Compatibility Report</div>
+  </div>
+  <div class="meta">
+    <span>Prepared by YuanFen Compatibility Reader</span>
+    <span>Date: \${date}</span>
+    <span>yuanfen.moonstoneadvisers.com</span>
+  </div>
+  <div class="score-banner">
+    <div class="score-couple">\${couple}</div>
+    <div class="score-label">Compatibility Score</div>
+    <div class="score-value">\${score}</div>
+    <div class="score-hearts">\${hearts}</div>
+  </div>
+  <div class="content">\${content}</div>
+  <div class="footer">緣份 · Ancient Chinese Compatibility Reading · yuanfen.moonstoneadvisers.com</div>
+</body>
+</html>\`);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); }, 800);
+  });
 
   function mdToHTML(t) {
     return t
