@@ -839,124 +839,6 @@ Name their couple archetype e.g. "The Power Couple ⚡" or "The Yin-Yang Dream T
 Be detailed, romantic, specific, and deeply encouraging. Make them feel like the universe conspired to bring them together!`;
   }
 
-  // PDF Download
-  document.getElementById('btnDownload').addEventListener('click', () => {
-    const couple = document.getElementById('coupleNames').textContent;
-    const score = document.getElementById('scoreDisplay').textContent;
-    const hearts = document.getElementById('heartBar').textContent;
-    const content = document.getElementById('resultContent').innerHTML;
-    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(\`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>緣份 Compatibility Reading</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Lato', sans-serif; color: #3d1a2e; background: white; }
-
-  .cover {
-    background: linear-gradient(135deg, #e91e8c, #f06292, #f9a825);
-    color: white;
-    padding: 60px 48px;
-    text-align: center;
-  }
-
-  .cover-top { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; opacity: 0.85; margin-bottom: 12px; }
-  .cover-chinese { font-family: serif; font-size: 72px; letter-spacing: 12px; margin-bottom: 4px; }
-  .cover-pinyin { font-family: 'Playfair Display', serif; font-size: 18px; font-style: italic; letter-spacing: 4px; opacity: 0.9; margin-bottom: 4px; }
-  .cover-title { font-size: 14px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.75; }
-
-  .meta {
-    background: #fff5f7;
-    padding: 14px 48px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: #7b4f6a;
-    letter-spacing: 1px;
-    border-bottom: 2px solid #fce4ec;
-  }
-
-  .score-banner {
-    background: linear-gradient(135deg, #fff0f7, #fffbe6);
-    padding: 28px 48px;
-    text-align: center;
-    border-bottom: 1px solid #fce4ec;
-  }
-
-  .score-couple { font-family: 'Playfair Display', serif; font-size: 20px; font-style: italic; color: #3d1a2e; margin-bottom: 8px; }
-  .score-label { font-size: 10px; letter-spacing: 4px; color: #f06292; text-transform: uppercase; margin-bottom: 6px; }
-  .score-value { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700; color: #e91e8c; line-height: 1; }
-  .score-hearts { font-size: 20px; margin-top: 8px; letter-spacing: 4px; }
-
-  .content { padding: 32px 48px 48px; }
-
-  h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 16px;
-    font-style: italic;
-    color: #e91e8c;
-    margin: 28px 0 10px;
-    padding-bottom: 6px;
-    border-bottom: 1.5px solid #fce4ec;
-  }
-
-  p { font-size: 13px; line-height: 1.8; margin-bottom: 12px; }
-  strong { color: #e91e8c; font-weight: 700; }
-
-  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; table-layout: fixed; }
-  th { background: rgba(240,98,146,0.1); color: #e91e8c; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid #fce4ec; }
-  th:first-child, td:first-child { width: 30%; font-weight: 700; vertical-align: top; }
-  th:last-child, td:last-child { width: 70%; vertical-align: top; }
-  td { padding: 10px 12px; border-bottom: 1px solid #fce4ec; line-height: 1.6; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-
-  .footer {
-    background: linear-gradient(135deg, #e91e8c, #f9a825);
-    color: white;
-    text-align: center;
-    padding: 16px;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 32px;
-  }
-
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  }
-</style>
-</head>
-<body>
-  <div class="cover">
-    <div class="cover-top">Ancient Chinese Compatibility Reading</div>
-    <div class="cover-chinese">緣份</div>
-    <div class="cover-pinyin">Yuán Fèn</div>
-    <div class="cover-title">Destiny & Love Compatibility Report</div>
-  </div>
-  <div class="meta">
-    <span>Prepared by YuanFen Compatibility Reader</span>
-    <span>Date: \${date}</span>
-    <span>yuanfen.moonstoneadvisers.com</span>
-  </div>
-  <div class="score-banner">
-    <div class="score-couple">\${couple}</div>
-    <div class="score-label">Compatibility Score</div>
-    <div class="score-value">\${score}</div>
-    <div class="score-hearts">\${hearts}</div>
-  </div>
-  <div class="content">\${content}</div>
-  <div class="footer">緣份 · Ancient Chinese Compatibility Reading · yuanfen.moonstoneadvisers.com</div>
-</body>
-</html>\`);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); }, 800);
-  });
-
   function mdToHTML(t) {
     return t
       .replace(/^### (.+)$/gm,'<h3>$1</h3>')
@@ -966,23 +848,86 @@ Be detailed, romantic, specific, and deeply encouraging. Make them feel like the
       .replace(/\*(.+?)\*/g,'<em>$1</em>')
       .replace(/^---$/gm,'<hr>')
       .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
-      .replace(/^\|(.+)\|$/gm, row => {
-        const cells = row.split('|').filter(c=>c.trim());
-        if (cells.every(c=>/^[\s\-:]+$/.test(c))) return '';
-        return '<tr>'+cells.map(c=>`<td>${c.trim()}</td>`).join('')+'</tr>';
+      .replace(/^\|(.+)\|$/gm, function(row) {
+        var cells = row.split('|').filter(function(c){return c.trim();});
+        if (cells.every(function(c){return /^[\s\-:]+$/.test(c);})) return '';
+        return '<tr>'+cells.map(function(c){return '<td>'+c.trim()+'</td>';}).join('')+'</tr>';
       })
-      .replace(/(<tr>[\s\S]*?<\/tr>)/g, m => {
-        const rows = m.match(/<tr>[\s\S]*?<\/tr>/g)||[];
+      .replace(/(<tr>[\s\S]*?<\/tr>)/g, function(m) {
+        var rows = m.match(/<tr>[\s\S]*?<\/tr>/g)||[];
         if (!rows.length) return m;
-        const head = rows[0].replace(/<td>/g,'<th>').replace(/<\/td>/g,'</th>');
-        return `<table><thead>${head}</thead><tbody>${rows.slice(1).join('')}</tbody></table>`;
+        var head = rows[0].replace(/<td>/g,'<th>').replace(/<\/td>/g,'<\/th>');
+        return '<table><thead>'+head+'<\/thead><tbody>'+rows.slice(1).join('')+'<\/tbody><\/table>';
       })
-      .replace(/\n\n/g,'</p><p>')
-      .replace(/^(?!<[htbp])(.+)$/gm,'<p>$1</p>')
+      .replace(/\n\n/g,'<\/p><p>')
+      .replace(/^(?!<[htbp])(.+)$/gm,'<p>$1<\/p>')
       .replace(/<p><\/p>/g,'')
       .replace(/<p>(<[hbt])/g,'$1')
       .replace(/(<\/[hbt][^>]*>)<\/p>/g,'$1');
   }
+
+  // PDF Download
+  document.getElementById('btnDownload').addEventListener('click', function() {
+    var couple = document.getElementById('coupleNames').textContent;
+    var score = document.getElementById('scoreDisplay').textContent;
+    var hearts = document.getElementById('heartBar').textContent;
+    var readingContent = document.getElementById('resultContent').innerHTML;
+    var date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+    html += '<title>YuanFen Compatibility Reading</title>';
+    html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">';
+    html += '<style>';
+    html += '* { box-sizing: border-box; margin: 0; padding: 0; }';
+    html += 'body { font-family: Lato, sans-serif; color: #3d1a2e; background: white; }';
+    html += '.cover { background: linear-gradient(135deg, #e91e8c, #f06292, #f9a825); color: white; padding: 56px 48px; text-align: center; }';
+    html += '.cover-top { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; opacity: 0.85; margin-bottom: 10px; }';
+    html += '.cover-chinese { font-family: serif; font-size: 68px; letter-spacing: 12px; margin-bottom: 4px; }';
+    html += '.cover-pinyin { font-family: "Playfair Display", serif; font-size: 18px; font-style: italic; letter-spacing: 4px; opacity: 0.9; margin-bottom: 4px; }';
+    html += '.cover-title { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.75; }';
+    html += '.meta { background: #fff5f7; padding: 12px 48px; display: flex; justify-content: space-between; font-size: 11px; color: #7b4f6a; letter-spacing: 1px; border-bottom: 2px solid #fce4ec; }';
+    html += '.score-banner { background: linear-gradient(135deg, #fff0f7, #fffbe6); padding: 24px 48px; text-align: center; border-bottom: 1px solid #fce4ec; }';
+    html += '.score-couple { font-family: "Playfair Display", serif; font-size: 20px; font-style: italic; color: #3d1a2e; margin-bottom: 8px; }';
+    html += '.score-label { font-size: 10px; letter-spacing: 4px; color: #f06292; text-transform: uppercase; margin-bottom: 6px; }';
+    html += '.score-value { font-family: "Playfair Display", serif; font-size: 52px; font-weight: 700; color: #e91e8c; line-height: 1; }';
+    html += '.score-hearts { font-size: 20px; margin-top: 8px; letter-spacing: 4px; }';
+    html += '.content { padding: 32px 48px 48px; }';
+    html += 'h2 { font-family: "Playfair Display", serif; font-size: 16px; font-style: italic; color: #e91e8c; margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid #fce4ec; }';
+    html += 'h3 { font-family: "Playfair Display", serif; font-size: 14px; color: #f06292; margin: 16px 0 8px; }';
+    html += 'p { font-size: 13px; line-height: 1.8; color: #3d1a2e; margin-bottom: 12px; }';
+    html += 'strong { color: #e91e8c; font-weight: 700; }';
+    html += 'table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; table-layout: fixed; }';
+    html += 'th { background: rgba(240,98,146,0.1); color: #e91e8c; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5px solid #fce4ec; }';
+    html += 'th:first-child, td:first-child { width: 32%; font-weight: 700; vertical-align: middle; white-space: nowrap; }';
+    html += 'th:last-child, td:last-child { width: 68%; vertical-align: top; }';
+    html += 'td { padding: 10px 12px; border-bottom: 1px solid #fce4ec; line-height: 1.6; vertical-align: top; }';
+    html += 'tr:last-child td { border-bottom: none; }';
+    html += 'blockquote { border-left: 3px solid #f06292; padding: 8px 16px; margin: 12px 0; background: rgba(240,98,146,0.05); border-radius: 0 8px 8px 0; font-style: italic; color: #7b4f6a; }';
+    html += '.footer { background: linear-gradient(135deg, #e91e8c, #f9a825); color: white; text-align: center; padding: 14px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-top: 32px; }';
+    html += '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+    html += '</style></head><body>';
+    html += '<div class="cover">';
+    html += '<div class="cover-top">Ancient Chinese Compatibility Reading</div>';
+    html += '<div class="cover-chinese">&#32511;&#20221;</div>';
+    html += '<div class="cover-pinyin">Yu&#225;n F&#232;n</div>';
+    html += '<div class="cover-title">Destiny &amp; Love Compatibility Report</div>';
+    html += '</div>';
+    html += '<div class="meta"><span>YuanFen Compatibility Reader</span><span>Date: ' + date + '</span><span>yuanfen.moonstoneadvisers.com</span></div>';
+    html += '<div class="score-banner">';
+    html += '<div class="score-couple">' + couple + '</div>';
+    html += '<div class="score-label">Compatibility Score</div>';
+    html += '<div class="score-value">' + score + '</div>';
+    html += '<div class="score-hearts">' + hearts + '</div>';
+    html += '</div>';
+    html += '<div class="content">' + readingContent + '</div>';
+    html += '<div class="footer">&#32511;&#20221; &middot; Ancient Chinese Compatibility &middot; yuanfen.moonstoneadvisers.com</div>';
+    html += '</body></html>';
+
+    var printWindow = window.open('', '_blank');
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(function() { printWindow.print(); }, 800);
+  });
 </script>
 </body>
 </html>
