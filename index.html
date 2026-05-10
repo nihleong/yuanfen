@@ -908,8 +908,15 @@
 
   function checkReady() { btnAnalyze.disabled = !(file1 && file2); }
 
-  setupSlot('slot1','file1',1);
-  setupSlot('slot2','file2',2);
+  // Setup slots only when upload section becomes visible
+  var slotsInitialized = false;
+  function initSlots() {
+    if (!slotsInitialized) {
+      slotsInitialized = true;
+      setupSlot('slot1','file1',1);
+      setupSlot('slot2','file2',2);
+    }
+  }
 
   btnAnalyze.addEventListener('click', analyze);
 
@@ -1192,8 +1199,9 @@ Be detailed, romantic, specific, and deeply encouraging. Make them feel like the
     var banner = document.getElementById('successBanner');
     if (banner) {
       banner.style.display = 'block';
-      banner.textContent = '✅ Payment confirmed! Upload both photos below to begin your reading.';
     }
+    // Initialize slots now that section is visible
+    initSlots();
   }
 
   function showPaymentFailed() {
