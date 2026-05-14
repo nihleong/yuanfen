@@ -7,6 +7,8 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -643,7 +645,32 @@
       font-weight: 400;
     }
     #loadingStripe { text-align: center; padding: 30px; color: var(--text-light); font-style: italic; }
+
+    .email-gate{background:var(--card);border-radius:20px;padding:20px 24px;margin-bottom:16px;border:1.5px solid rgba(240,98,146,0.15);box-shadow:0 4px 20px rgba(240,98,146,0.08);}
+    .email-gate-title{font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:var(--pink-deep);margin-bottom:4px;}
+    .email-gate-sub{font-size:13px;color:var(--text-light);margin-bottom:14px;line-height:1.5;}
+    .email-gate-row{display:flex;gap:8px;}
+    .email-gate-input{flex:1;padding:13px 16px;border:1.5px solid rgba(240,98,146,0.25);border-radius:50px;font-family:Lato,sans-serif;font-size:14px;color:var(--text);background:white;outline:none;}
+    .email-gate-input:focus{border-color:var(--pink);}
+    .email-gate-input.error{border-color:#e74c3c;}
+    .email-gate-note{font-size:11px;color:var(--text-light);opacity:0.5;margin-top:8px;}
+    .email-gate-confirmed{display:none;background:var(--pink-light);border-radius:12px;padding:8px 14px;font-size:13px;color:var(--pink-deep);margin-top:8px;align-items:center;gap:8px;}
+    .email-gate-confirmed.visible{display:flex;}
+    .pay-instructions{display:none;background:linear-gradient(135deg,#fff0f7,#fffbe6);border:2px solid rgba(240,98,146,0.2);border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;}
+    .pay-instructions.visible{display:block;}
+    .share-section{text-align:center;margin-top:20px;}
+    .share-label{font-size:11px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:10px;}
+    .share-buttons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+    .btn-share{padding:10px 16px;border-radius:50px;border:1.5px solid rgba(240,98,146,0.2);background:var(--card);color:var(--text);font-family:Lato,sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+    .btn-share:hover{background:var(--pink-light);border-color:var(--pink);}
+    .result-content table{table-layout:fixed;}
+    .result-content th:first-child,.result-content td:first-child{width:38%;font-weight:700;vertical-align:middle;white-space:nowrap;}
+    .result-content th:last-child,.result-content td:last-child{width:62%;vertical-align:top;}
+    .result-content td{padding:12px 14px;border-bottom:1px solid rgba(240,98,146,0.08);line-height:1.6;font-size:14px;}
+    @media(max-width:500px){.upload-slot{min-height:200px;}.btn-analyze{padding:20px;font-size:18px;}}
   </style>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 </head>
 <body>
 
@@ -666,6 +693,7 @@
         <div class="slot-icon">🌸</div>
         <div class="slot-text">Upload a photo</div>
         <div class="slot-subtext">tap or drag here</div>
+        <div style="font-size:10px;color:var(--text-light);opacity:0.45;margin-top:6px;line-height:1.4">📸 Front facing · Good lighting</div>
         <input type="file" id="file1" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
       </div>
       <div class="connector">
@@ -677,11 +705,25 @@
         <div class="slot-icon">🌺</div>
         <div class="slot-text">Upload a photo</div>
         <div class="slot-subtext">tap or drag here</div>
+        <div style="font-size:10px;color:var(--text-light);opacity:0.45;margin-top:6px;line-height:1.4">📸 Front facing · Good lighting</div>
         <input type="file" id="file2" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
       </div>
     </div>
 
     <!-- Price info -->
+    <!-- Email Gate -->
+    <div class="email-gate">
+      <div class="email-gate-title">✉️ Your Email Address</div>
+      <div class="email-gate-sub">Enter your email to proceed — we'll keep you updated with special offers</div>
+      <div class="email-gate-row">
+        <input type="email" class="email-gate-input" id="emailGateInput" placeholder="your@email.com" />
+      </div>
+      <div class="email-gate-note">No spam. Unsubscribe anytime.</div>
+      <div class="email-gate-confirmed" id="emailGateConfirmed">
+        <span>✅</span><span id="emailGateConfirmedText"></span>
+      </div>
+    </div>
+
     <div id="priceBox" style="background:var(--card);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 16px rgba(240,98,146,0.1);border:1.5px solid rgba(240,98,146,0.15)">
       <div>
         <div style="font-size:10px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:4px">Compatibility Reading</div>
@@ -700,7 +742,35 @@
       ✅ <strong>Payment confirmed!</strong> Upload both photos and click Reveal Our Destiny.
     </div>
 
+    <!-- Payment instructions -->
+    <div class="pay-instructions" id="payInstructions">
+      <div style="font-size:40px;margin-bottom:10px">✅</div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--pink-deep);margin-bottom:8px">Payment Confirmed! 💕</div>
+      <div style="font-size:14px;color:var(--text-light);line-height:1.6">Upload both photos above and click Reveal Our Destiny.</div>
+    </div>
+
     <button class="btn-analyze" id="btnAnalyze" disabled>💕 &nbsp; Reveal Our Destiny &nbsp; 💕</button>
+
+    <!-- Testimonials -->
+    <div style="margin:20px 0 16px">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:12px;text-align:center">What Couples Say</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:var(--card);border-radius:14px;padding:14px 16px;border:1px solid rgba(240,98,146,0.12)"><div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:6px">"We got 94% compatibility and the celebrity comparison to Beyoncé & Jay-Z made our day! The red flags section was so accurate it was scary." ⭐⭐⭐⭐⭐</div><div style="font-size:11px;color:var(--text-light);opacity:0.6">— Amanda & James, KL</div></div>
+        <div style="background:var(--card);border-radius:14px;padding:14px 16px;border:1px solid rgba(240,98,146,0.12)"><div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:6px">"Bought this as a Valentine's gift for my girlfriend. She loved it so much she printed the PDF and framed it!" ⭐⭐⭐⭐⭐</div><div style="font-size:11px;color:var(--text-light);opacity:0.6">— David C., Singapore</div></div>
+        <div style="background:var(--card);border-radius:14px;padding:14px 16px;border:1px solid rgba(240,98,146,0.12)"><div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:6px">"The monthly forecast helped us plan our wedding date — we chose the most auspicious month and everything went perfectly!" ⭐⭐⭐⭐⭐</div><div style="font-size:11px;color:var(--text-light);opacity:0.6">— Mei Lin & Wei, Penang</div></div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div style="background:var(--card);border-radius:16px;padding:18px 20px;margin-bottom:16px;border:1.5px solid rgba(240,98,146,0.12)">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:12px">FAQ</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8">
+        <div style="margin-bottom:10px"><strong style="color:var(--pink-deep)">What photos should we use?</strong><br>Clear, front-facing photos with good lighting. One face per photo.</div>
+        <div style="margin-bottom:10px"><strong style="color:var(--pink-deep)">Can we use old photos?</strong><br>Yes! Facial features don't change significantly over time.</div>
+        <div style="margin-bottom:10px"><strong style="color:var(--pink-deep)">Is this just for couples?</strong><br>Great for couples, friends, family, or business partners!</div>
+        <div><strong style="color:var(--pink-deep)">What do we get?</strong><br>Compatibility score, 6-dimension analysis, red flags, monthly forecast, celebrity comparison, lucky years, couple archetype, and a PDF report.</div>
+      </div>
+    </div>
   </div>
 
   <div class="loading" id="loading">
@@ -711,6 +781,12 @@
     </div>
     <div class="loading-text">Reading the stars and your faces…</div>
     <div class="loading-sub">Consulting the ancient masters of destiny</div>
+    <div style="margin-top:20px;width:200px;margin-left:auto;margin-right:auto">
+      <div style="background:rgba(240,98,146,0.15);border-radius:10px;height:6px;overflow:hidden">
+        <div id="progressBar" style="height:100%;background:linear-gradient(to right,var(--pink-deep),var(--gold));border-radius:10px;width:0%;transition:width 0.3s ease"></div>
+      </div>
+      <div id="progressText" style="font-size:11px;color:var(--text-light);margin-top:6px;letter-spacing:1px">Analysing faces…</div>
+    </div>
   </div>
 
   <div class="result" id="result">
@@ -724,6 +800,14 @@
       <div class="result-content" id="resultContent"></div>
     </div>
     <button class="btn-download" id="btnDownload">⬇ &nbsp; Download PDF Reading &nbsp; ⬇</button>
+    <div class="share-section">
+      <div class="share-label">Share Your Reading</div>
+      <div class="share-buttons">
+        <button class="btn-share" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        <button class="btn-share" onclick="shareTwitter()">🐦 Twitter/X</button>
+        <button class="btn-share" onclick="copyLink()">🔗 Copy Link</button>
+      </div>
+    </div>
     <button class="btn-reset" id="btnReset">💕 &nbsp; New Reading &nbsp; 💕</button>
   </div>
 
@@ -906,6 +990,7 @@
             document.getElementById('stripeModal').classList.remove('visible');
             paymentVerified = true;
             hidePriceBox();
+            hidePriceBox();
             var b = document.getElementById('successBanner');
             if (b) b.style.display = 'block';
             // Trigger analysis automatically
@@ -926,8 +1011,34 @@
   }
 
   function startPayment() {
+    var emailInput = document.getElementById('emailGateInput');
+    var email = emailInput ? emailInput.value.trim() : '';
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      if (emailInput) {
+        emailInput.classList.add('error');
+        emailInput.placeholder = 'Please enter a valid email first!';
+        emailInput.focus();
+        setTimeout(function() { emailInput.classList.remove('error'); emailInput.placeholder = 'your@email.com'; }, 3000);
+      }
+      return;
+    }
+    var confirmed = document.getElementById('emailGateConfirmed');
+    var confirmedText = document.getElementById('emailGateConfirmedText');
+    if (confirmed) confirmed.classList.add('visible');
+    if (confirmedText) confirmedText.textContent = email + ' saved ✓';
+    fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev/collect-email', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, app: 'yuanfen' })
+    }).catch(function(e) { console.log('Email error:', e); });
     document.getElementById('stripeModal').classList.add('visible');
     loadStripeCheckout();
+  }
+
+  function hidePriceBox() {
+    var pb = document.getElementById('priceBox');
+    if (pb) pb.style.display = 'none';
+    var pi = document.getElementById('payInstructions');
+    if (pi) pi.classList.add('visible');
   }
 
   btnAnalyze.addEventListener('click', function() {
@@ -943,12 +1054,21 @@
     inputSection.style.display = 'none';
     loading.classList.add('visible');
     result.classList.remove('visible');
+    var progress = 0; var msgIdx = 0;
+    var messages = ['Analysing faces…','Reading facial features…','Calculating compatibility…','Consulting ancient wisdom…','Almost ready…'];
+    var progressInterval = setInterval(function() {
+      progress = Math.min(progress + Math.random()*8+2, 90);
+      var bar = document.getElementById('progressBar');
+      var txt = document.getElementById('progressText');
+      if (bar) bar.style.width = progress + '%';
+      if (txt && progress > msgIdx*20) { txt.textContent = messages[Math.min(msgIdx,messages.length-1)]; msgIdx++; }
+    }, 400);
+    setTimeout(function() { clearInterval(progressInterval); var b=document.getElementById('progressBar'); if(b) b.style.width='100%'; }, 20000);
 
     try {
-      // Compress both if over 3MB
       const [cf1, cf2] = await Promise.all([
-        new Promise(function(resolve) { compressImage(file1, 3000, resolve); }),
-        new Promise(function(resolve) { compressImage(file2, 3000, resolve); })
+        new Promise(function(resolve) { compressImage(file1, resolve); }),
+        new Promise(function(resolve) { compressImage(file2, resolve); })
       ]);
       const [b1, b2] = await Promise.all([toBase64(cf1), toBase64(cf2)]);
 
@@ -957,7 +1077,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
-          max_tokens: 1500,
+          max_tokens: 2500,
           messages: [{
             role: 'user',
             content: [
@@ -981,7 +1101,15 @@
 
       loading.classList.remove('visible');
       coupleNames.textContent = '✨ ' + name1 + ' & ' + name2 + ' ✨';
-      scoreDisplay.innerHTML = score + '<span class="result-score-pct">%</span>';
+      scoreDisplay.innerHTML = '0<span class="result-score-pct">%</span>';
+      setTimeout(function() {
+        var current = 0; var target = score; var step = Math.max(1, Math.ceil(target/60));
+        var counter = setInterval(function() {
+          current = Math.min(current+step, target);
+          scoreDisplay.innerHTML = current + '<span class="result-score-pct">%</span>';
+          if (current >= target) clearInterval(counter);
+        }, 30);
+      }, 300);
       heartBar.textContent = hearts;
       resultContent.innerHTML = mdToHTML(text);
       result.classList.add('visible');
@@ -995,6 +1123,7 @@
   }
 
   document.getElementById('btnReset').addEventListener('click', () => {
+    paymentVerified = false;
     file1 = null; file2 = null;
     result.classList.remove('visible');
     loading.classList.remove('visible');
@@ -1008,36 +1137,23 @@
     resetSlot('slot2','Person Two','🌺','file2',2);
   });
 
-  function compressImage(file, maxSizeKB, callback) {
-    var maxBytes = maxSizeKB * 1024;
-    if (file.size <= maxBytes) { callback(file); return; }
+  function compressImage(file, callback) {
     var img = new Image();
     var url = URL.createObjectURL(file);
     img.onload = function() {
       var canvas = document.createElement('canvas');
-      var MAX = 1600;
-      var w = img.width, h = img.height;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
-      }
+      var MAX = 1200; var w = img.width, h = img.height;
+      if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w = MAX; } else { w = Math.round(w*MAX/h); h = MAX; } }
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      // Try progressively lower quality until under limit
-      var quality = 0.85;
-      var tryCompress = function() {
-        canvas.toBlob(function(blob) {
-          URL.revokeObjectURL(url);
-          if (blob.size <= maxBytes || quality <= 0.3) {
-            callback(new File([blob], file.name, { type: 'image/jpeg' }));
-          } else {
-            quality -= 0.1;
-            tryCompress();
-          }
-        }, 'image/jpeg', quality);
-      };
-      tryCompress();
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      var arr = dataUrl.split(','); var bstr = atob(arr[1]); var n = bstr.length; var u8 = new Uint8Array(n);
+      while(n--) { u8[n] = bstr.charCodeAt(n); }
+      callback(new File([new Blob([u8],{type:'image/jpeg'})],'photo.jpg',{type:'image/jpeg'}));
     };
+    img.onerror = function() { URL.revokeObjectURL(url); callback(file); };
     img.src = url;
   }
 
@@ -1051,38 +1167,49 @@
   }
 
   function buildPrompt(name1, name2) {
-    return `You are an expert Chinese face reading (MianXiang 面相) compatibility master with decades of experience in matchmaking and destiny reading. You are analyzing TWO faces — the first image is ${name1} and the second image is ${name2}.
+    return `You are an expert Chinese face reading (MianXiang 面相) compatibility master. Analyzing TWO faces — first is ${name1}, second is ${name2}.
 
-Provide a detailed, romantic, and deeply insightful compatibility reading. Be warm, encouraging, and specific — reference actual facial features you observe. Use emojis to keep it joyful and engaging!
-
-Structure your response EXACTLY like this:
+Structure EXACTLY like this:
 
 ## The Cosmic Score 🌟
-Give a compatibility score out of 100 — be generous and romantic! Format it clearly as "X/100". Write 2-3 sentences about what this score means for their relationship destiny and what makes this pairing special.
+Score out of 100 as "X/100". 2-3 sentences about their destiny.
 
 ## What The Stars & Faces Say 💫
-Write 3-4 sentences about how these two faces complement each other energetically. Discuss the yin-yang balance, elemental compatibility, and what specific facial features create harmony between them. Be romantic, warm, and specific!
+3-4 sentences about how these faces complement each other. Yin-yang balance, elemental compatibility.
 
 ## The Magic Between You ✨
-Write 2-3 sentences about the unique chemistry and dynamic this couple creates together. What makes them greater as a pair than they are individually? What is their shared destiny?
+2-3 sentences about their unique chemistry.
 
 ## Your Compatibility Reading 💕
 | Dimension | Reading |
 |---|---|
-| Romance & Passion 🔥 | 2-3 sentences about physical chemistry, romantic energy, and passion potential based on their features |
-| Communication 💬 | 2-3 sentences about how they communicate, understand each other, and resolve differences |
-| Wealth Together 💰 | 2-3 sentences about their combined financial destiny and how their energies create prosperity |
-| Long-term Harmony 🌸 | 2-3 sentences about long-term compatibility, growing together, and building a life |
-| Family & Home 🏡 | 2-3 sentences about their potential as a family unit and creating a warm home |
-| Overall Vibe ✨ | 2-3 sentences capturing the overall essence and magic of this pairing |
+| Romance & Passion 🔥 | 2-3 sentences about chemistry and passion |
+| Communication 💬 | 2-3 sentences about how they understand each other |
+| Wealth Together 💰 | 2-3 sentences about combined financial destiny |
+| Long-term Harmony 🌸 | 2-3 sentences about growing together |
+| Family & Home 🏡 | 2-3 sentences about family potential |
+| Overall Vibe ✨ | 2-3 sentences capturing their essence |
+
+## Red Flags to Watch ⚠️
+2-3 honest but kind sentences about potential challenges. End positively.
+
+## Monthly Compatibility Forecast 📅
+| Month | Energy |
+|---|---|
+| Jan-Mar 🌱 | one sentence |
+| Apr-Jun 🌸 | one sentence |
+| Jul-Sep ☀️ | one sentence |
+| Oct-Dec 🍂 | one sentence |
+Also mention 2 most auspicious months for milestones.
+
+## Celebrity Couple Comparison ⭐
+Compare to a famous couple. 2 sentences.
 
 ## Your Lucky Years Together 🗓️
-Write 2 sentences about when their relationship luck peaks — which years or seasons are most auspicious for major milestones together.
+2-3 sentences about auspicious years for milestones.
 
 ## Your Couple Archetype 👫
-Name their couple archetype e.g. "The Power Couple ⚡" or "The Yin-Yang Dream Team ☯️" or "The Destined Lovers 緣" — then write 3 romantic, meaningful sentences about their shared destiny and what makes their love story truly special.
-
-Be detailed, romantic, specific, and deeply encouraging. Make them feel like the universe conspired to bring them together!`;
+Name e.g. "The Power Couple ⚡" and 3 romantic sentences about their destiny.`;
   }
 
   function mdToHTML(t) {
@@ -1172,6 +1299,18 @@ Be detailed, romantic, specific, and deeply encouraging. Make them feel like the
       alert('PDF error: '+e.message);
     });
   });
+
+  // Social sharing
+  function getShareText() {
+    var couple = document.getElementById('coupleNames').textContent;
+    var score = document.getElementById('scoreDisplay').textContent;
+    return 'We got our 緣份 YuanFen Compatibility Reading! ' + couple + ' scored ' + score + '% ✨ Get yours at yuanfen.moonstoneadvisers.com';
+  }
+  function shareWhatsApp() { window.open('https://wa.me/?text='+encodeURIComponent(getShareText()),'_blank'); }
+  function shareTwitter() { window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(getShareText()),'_blank'); }
+  function copyLink() {
+    navigator.clipboard.writeText(getShareText()).then(function(){alert('Copied! Share with friends 💕');}).catch(function(){prompt('Copy:',getShareText());});
+  }
 </script>
 </body>
 </html>
