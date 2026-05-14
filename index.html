@@ -1304,7 +1304,7 @@ Name e.g. "The Power Couple ⚡" and 3 romantic sentences about their destiny.`;
   function getShareText() {
     var couple = document.getElementById('coupleNames').textContent;
     var score = document.getElementById('scoreDisplay').textContent;
-    return 'We got our 緣份 YuanFen Compatibility Reading! ' + couple + ' scored ' + score + '% ✨ Get yours at yuanfen.moonstoneadvisers.com';
+    return 'We got our 緣份 YuanFen Compatibility Reading! ' + score + '% ✨ Get yours at yuanfen.moonstoneadvisers.com';
   }
   function shareWhatsApp() { window.open('https://wa.me/?text='+encodeURIComponent(getShareText()),'_blank'); }
   function shareTwitter() { window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(getShareText()),'_blank'); }
