@@ -1026,10 +1026,17 @@
     var confirmedText = document.getElementById('emailGateConfirmedText');
     if (confirmed) confirmed.classList.add('visible');
     if (confirmedText) confirmedText.textContent = email + ' saved ✓';
-    fetch('https://billowing-voice-e40bmianxiang-proxy.danny-679.workers.dev/collect-email', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, app: 'yuanfen' })
-    }).catch(function(e) { console.log('Email error:', e); });
+    // Send email directly via Web3Forms (client side)
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_key: '66ba11a4-7d94-4c57-9145-9fa8b8a11e71',
+        subject: 'New Customer Email — 緣份 YuanFen Compatibility',
+        from_name: 'Moonstone Apps',
+        message: 'App: 緣份 YuanFen Compatibility\nCustomer Email: ' + email + '\nTime: ' + new Date().toLocaleString('en-GB', {timeZone:'Asia/Kuala_Lumpur'})
+      })
+    }).then(function(r){return r.json();}).then(function(d){console.log('Email sent:',d);}).catch(function(e){console.log('Email error:',e);});
     document.getElementById('stripeModal').classList.add('visible');
     loadStripeCheckout();
   }
